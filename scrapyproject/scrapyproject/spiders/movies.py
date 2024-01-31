@@ -1,4 +1,5 @@
 import scrapy
+from scrapyproject.items import MovieItem
 
 class MoviesSpider(scrapy.Spider):
     name = 'movies'
@@ -15,15 +16,16 @@ class MoviesSpider(scrapy.Spider):
             yield scrapy.Request(url=response.urljoin(year_page), callback=self.parse_movie_page)
 
         next_page = response.xpath('//a[contains(text(), "Следующая страница")]/@href').extract_first()
-
+        # next_page = False
         if next_page:
             yield response.follow(next_page, callback=self.parse_movie_by_year_page)
     
     def parse_movie_page(self, response):
+        movie = MovieItem()
         # get name
         name_paths = ('//th[@colspan="2"]/text()',
                       '//*[@id="firstHeading"]/span/text()')
-        name = self.selector(response, name_paths)
+        movie['name'] = self.selector(response, name_paths, name_flag=True)
 
         # get genre
         genre_paths = ('//*[@id="mw-content-text"]/div[1]/table[1]/tbody/tr[3]/td/span/a[1]/text()',
@@ -32,13 +34,13 @@ class MoviesSpider(scrapy.Spider):
                        '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[4]/td/span/a/text()',
                        '//*[@id="mw-content-text"]/div[1]/table[1]/tbody/tr[3]/td/span/a/text()',
                        '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[3]/td/span/span/a/text()')
-        genre = self.selector(response, genre_paths)
+        movie['genre'] = self.selector(response, genre_paths)
 
         # get director
         director_paths = ('//*[@id="mw-content-text"]/div[1]/table/tbody/tr[5]/td/span/a/text()',
                           '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[5]/td/span/text()',
                           '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[4]/td/span/text()')
-        director = self.selector(response, director_paths)
+        movie['director'] = self.selector(response, director_paths)
 
         # get country
         country_paths = ('//*[@id="mw-content-text"]/div[1]/table/tbody/tr[12]/td/span/span/a/span/text()',
@@ -47,7 +49,7 @@ class MoviesSpider(scrapy.Spider):
                          '//*[@id="mw-content-text"]/div[1]/table[1]/tbody/tr[16]/td/ul/li[1]/span/span[2]/span/a/text()',
                          '//*[@id="mw-content-text"]/div[1]/table[1]/tbody/tr[12]/td/div/p/span/a/span/text()',
                          '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[12]/td/ul/li/span/span[2]/span/a/text()')
-        country = self.selector(response, country_paths)
+        movie['country'] = self.selector(response, country_paths)
 
         # get year
         year_paths = ('//*[@id="mw-content-text"]/div[1]/table/tbody/tr[14]/td/a/span/text()',
@@ -56,15 +58,10 @@ class MoviesSpider(scrapy.Spider):
                       '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[15]/td/span/span/span/a/text()',
                       '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[14]/td/span/span/span/a/text()',
                       '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[13]/td/span/span/span/a/text()')
-        year = self.selector(response, year_paths)
+        movie['year'] = self.selector(response, year_paths)
+        movie['url'] = response._url
 
-        yield {
-            'name' : name,
-            'genre' : genre,
-            'director' : director,
-            'country' : country,
-            'year' : year
-        }
+        yield movie
     
     def selector(self, response, paths, name_flag=False):
         for path in paths:

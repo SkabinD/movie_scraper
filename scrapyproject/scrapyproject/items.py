@@ -5,8 +5,10 @@
 
 import scrapy
 
-
-class ScrapyprojectItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+class MovieItem(scrapy.Item):
+    name = scrapy.Field()
+    genre = scrapy.Field()
+    country = scrapy.Field()
+    director = scrapy.Field()
+    year = scrapy.Field()
+    url = scrapy.Field() # For debug purposes
