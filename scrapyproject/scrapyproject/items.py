@@ -11,4 +11,5 @@ class MovieItem(scrapy.Item):
     country = scrapy.Field()
     director = scrapy.Field()
     year = scrapy.Field()
+    # imdb = scrapy.Field()
     url = scrapy.Field() # For debug purposes
