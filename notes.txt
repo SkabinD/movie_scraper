@@ -1,0 +1,54 @@
+import scrapy
+
+class MoviesSpider(scrapy.Spider):
+    name = 'movies'
+    allowed_domains = ['ru.wikipedia.org']
+    start_urls = ['https://ru.wikipedia.org/wiki/%D0%9A%D0%B0%D1%82%D0%B5%D0%B3%D0%BE%D1%80%D0%B8%D1%8F:%D0%A4%D0%B8%D0%BB%D1%8C%D0%BC%D1%8B_%D0%BF%D0%BE_%D0%B0%D0%BB%D1%84%D0%B0%D0%B2%D0%B8%D1%82%D1%83']
+
+    def start_requests(self):
+        url = self.start_urls[0]
+        yield scrapy.Request(url=url, callback=self.parse_movie_by_year_page)
+
+    def parse_movie_by_year_page(self, response):
+        year_pages = response.css('.mw-category a::attr(href)').extract()
+        for year_page in year_pages:
+            yield scrapy.Request(url=response.urljoin(year_page), callback=self.parse_movie_page)
+
+        next_page = response.xpath('//a[contains(text(), "Следующая страница")]/@href').extract_first()
+
+        if next_page:
+            yield response.follow(next_page, callback=self.parse_movie_by_year_page)
+
+    def parse_movie_page(self, response):
+        name_paths = ('//th[@colspan="2"]/text()',)
+        genre_paths = ('//span[@data-wikidata-property-id="P136"]/text()',)
+        director_paths = ('//*[@id="mw-content-text"]/div[1]/table/tbody/tr[5]/td/span/a/text()',)
+        country_paths = (
+            '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[12]/td/span/span/a/span/text()',
+            '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[11]/td/span/span/a/span/text()'
+        )
+        year_paths = (
+            '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[14]/td/a/span/text()',
+            '//*[@id="mw-content-text"]/div[1]/table/tbody/tr[13]/td/a/span/text()'
+        )
+
+        name = self.extract_first_value(response, name_paths)
+        genre = self.extract_first_value(response, genre_paths)
+        director = self.extract_first_value(response, director_paths)
+        country = self.extract_first_value(response, country_paths)
+        year = self.extract_first_value(response, year_paths)
+
+        yield {
+            'name': name,
+            'genre': genre,
+            'director': director,
+            'country': country,
+            'year': year
+        }
+
+    def extract_first_value(self, response, paths):
+        for path in paths:
+            value = response.xpath(path).extract_first()
+            if value:
+                return value
+        return None

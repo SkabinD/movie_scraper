@@ -45,7 +45,7 @@ class MoviesSpider(scrapy.Spider):
         yield movie
 
     def selector(self, response, paths):
-        ban = ['\\', '\n', '[1]', "[2]", "[3]", "[4]", "[d]", "[…]", ' / ', ' ', '  ', ', ', " (", " ", "(англ.)", "рус.", " и "]
+        ban = ['\\', '\n', '[1]', "[2]", "[3]", "[4]", "[d]", "[…]", ' / ', ' ', '  ', ', ', " (", " ", "(англ.)", "рус.", " и ", ')', ' (или ', ' (1)', ' (2)', '[en]']
         for path in paths:
             resp = set(filter(lambda x: x not in ban, response.css(path).extract()))
             if resp:
