@@ -13,4 +13,9 @@ class MovieItem(scrapy.Item):
     year = scrapy.Field()
 
 class MovieItemExtended(MovieItem):
+    name = scrapy.Field()
+    genre = scrapy.Field()
+    country = scrapy.Field()
+    director = scrapy.Field()
+    year = scrapy.Field()
     imdb_score = scrapy.Field()
